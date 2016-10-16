@@ -1,0 +1,84 @@
+<html>
+<head>
+	<title>Weather forecast</title>
+<script type="text/javascript">
+
+function TextlengthFunc(){
+	if (response!=null) { /*Elegxos gia to ean exei lif8ei kanonika to XML response*/
+		var Textlength= document.getElementById('Txtbox').value.length;
+		var Textvalue= document.getElementById('Txtbox').value;
+		var ArrayLength= response.geonames.length;
+		if (Textlength>2) { /*Elegxos gia to ean o xristis exei pliktrologisei 3 grammata*/
+			if (document.getElementById('SelectorId')!=null){
+				document.body.removeChild(document.getElementById('SelectorId'));/*Ean yparxei idi element Select, to diagrafw prin ftiaxw neo*/
+			};
+			var Selector= document.createElement("SELECT");/*Dimiourgia Select Element me tis xwres pou tairiazoun ta 3 prwta grammata.I html toy ka8e option einai to onoma tis xwras kai to value i 8esi ston pinaka. Ka8e option exei enan event handler onclick pou trexei tin GetWthrxHR me orisma tin 8esi ston pinaka */
+			Selector.setAttribute("id", "SelectorId");
+			for (var i = 0; i < ArrayLength; i++) {
+				if(Textvalue.toLowerCase() == response.geonames[i].countryName.substring(0,Textlength).toLowerCase()){/*Anazitisi me metatropi se lowercase wste to search na min einai Case Sensitive*/
+					var TempOption= document.createElement("OPTION");
+					TempOption.setAttribute("value", i.toString());	
+					TempOption.innerHTML= response.geonames[i].countryName;
+					TempOption.setAttribute("onclick", "GetWthrxHR(value)");
+					Selector.appendChild(TempOption);
+					document.body.appendChild(Selector);
+				}					
+			};
+		};
+	};	
+};
+
+function GetxHR(){ /*To XMLHttpRequest sto geonames.org*/
+	var xHR = new XMLHttpRequest();
+	var url = "http://api.geonames.org/countryInfoJSON?username=NickLon";
+	xHR.open("GET", url, true);
+	xHR.onreadystatechange = function(){
+		if (xHR.status == 200 && xHR.readyState == 4){
+			response= JSON.parse(xHR.responseText);
+			document.getElementById('Txtbox').style.visibility= "visible";
+			document.getElementById('XmlWait').style.visibility= "hidden";
+			console.log("XMLResp received");				
+		};
+	};
+	xHR.send();
+};
+
+function GetWthrxHR(CountryId){/*To XMLHttpRequest sto openweathermap.org*/
+	var xHR2 = new XMLHttpRequest();
+	var url = "http://api.openweathermap.org/data/2.5/weather?q="+response.geonames[CountryId].capital+"&mode=JSON&APPID=ba095a4f6cd0c106d1c97c1f1503a367";
+	var surl= url.replace(" ","%20");/*Antikatastasi kenwn me to ASCII antistoixo %20*/
+	xHR2.open("GET", url, true);
+	xHR2.onreadystatechange = function(){
+		if (xHR2.status == 200 && xHR2.readyState == 4){
+			response2= JSON.parse(xHR2.responseText);
+			if (response2.cod!= 200) {/*Alert ean to onoma xwras pou psaxnoume den yparxei sto openweathermap*/
+				alert(response2.message);
+			}
+			else{
+				var Temperature= response2.main.temp;
+				var Humidity= response2.main.humidity;
+				var Pressure= response2.main.pressure;
+				var WndSpd= response2.wind.speed;
+				var WindDir= response2.wind.deg;
+				alert("Weather in "+response.geonames[CountryId].capital+" is:\n\nTemperature: "+Temperature+" kelvin\nHumidity: "+Humidity+" %\nPressure: "+Pressure+" hPa\nWind Speed: "+WndSpd+" km/h\nWind: "+WindDir+" Degree Direction");
+			};
+		};
+	};
+	xHR2.send();
+	
+
+};
+</script>
+</head>
+<body>
+
+<b>Insert Country: </b><input type= "textbox" id= "Txtbox"></input>
+<script type="text/javascript">
+document.getElementById('Txtbox').addEventListener("keyup", TextlengthFunc);  /*Textbox sto opoio o xristis eisagei tin xwra epilogis. Otan o xristis grapsei kati mesa, treei i function TextlengthFunc */
+document.onload= GetxHR(); /*Otan fortwsei to DOM kanw to XmlHttpRequest sto Geonames*/
+document.getElementById('Txtbox').style.visibility= "hidden";/*Emfanisi toy textbox mono otan exei er8ei to response*/
+
+</script>
+<p id= "XmlWait" style= "color:red">Please wait for Data!</p>
+</body>
+</html>
